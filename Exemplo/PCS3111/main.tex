@@ -1,0 +1,113 @@
+\documentclass[a4paper]{article}
+
+\usepackage[brazilian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{adjustbox}
+
+% Estilo PCSAMC com as personalizações
+\usepackage{pcsamc}
+\usepackage{enumitem}
+\usepackage{xhfill}
+\usepackage{multicol}
+\setlength{\columnsep}{1.5cm}
+%\setlength{\columnseprule}{1pt}
+
+\begin{document}
+\element{dissertativas}{
+    \def\AMCbeginQuestion#1#2{\par #2\hspace*{1em}}
+	\noindent{}{\large{}\textbf{[2,6 pontos] Questão 1}}\par
+	\input{questao1.tex}
+	
+    \def\AMCbeginQuestion#1#2{\par #2\hspace*{1em}}
+	\noindent{}{\large{}\textbf{[2,6 pontos] Questão 2}}\par
+	\input{questao2.tex}
+}
+	
+\element{testes}{
+	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+	\begin{question}{Teste 1}\scoring{b=0.6,e=0,v=0,m=0}
+		\input{teste1.tex}
+    \end{question}
+}
+
+\element{testes}{
+	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+	\begin{question}{Teste 2}\scoring{b=0.6,e=0,v=0,m=0}
+		\input{teste2.tex}
+	\end{question}
+}
+
+\element{testes}{		
+	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+	\begin{question}{Teste 3}\scoring{b=0.6,e=0,v=0,m=0}
+		\input{teste3.tex}
+	\end{question}
+}
+
+\element{testes}{
+	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+	\begin{question}{Teste 4}\scoring{b=0.6,e=0,v=0,m=0}
+		\input{teste4.tex}
+	\end{question}
+}
+
+\element{testes}{
+	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+	\begin{question}{Teste 5}\scoring{b=0.6,e=0,v=0,m=0}
+		\input{teste5.tex}
+	\end{question}
+}
+
+\element{testes}{
+	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+	\begin{question}{Teste 6}\scoring{b=0.6,e=0,v=0,m=0}
+		\input{teste6.tex}
+	\end{question}
+}
+
+\element{testes}{
+	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+	\begin{question}{Teste 7}\scoring{b=0.6,e=0,v=0,m=0}
+		\input{teste7.tex}
+	\end{question}
+}
+
+\element{testes}{
+	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+	\begin{question}{Teste 8}\scoring{b=0.6,e=0,v=0,m=0}
+		\input{teste8.tex}
+	\end{question}
+ }
+
+  % Início da impressão de cada prova
+  \onecopy{1}{
+    \disciplina{PCS3111}{Laboratório de Programação Orientada a Objetos}
+    \avaliacao{1a. Prova}
+    \data{31/08/2016}
+    \turmas{1/2M, 2/2T, 3/3M, 4/4M, 5/4T, 6/5M, 7/5T, 8/6T}
+    \cabecalho{}
+    
+    \input{cabecalho.tex}
+
+	\noindent{}{\large{}\textbf{[5,2 pontos] Parte I - Questões Dissertativas}}\par
+	\vspace{1cm}
+
+    \insertgroup{dissertativas}
+	  % \noindent{}{\large{}\textbf{[4,8 pontos] Testes}}\par
+    % \def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+    % Insere as questões aleatorizadas, começando pelo número abaixo
+    % \AMCnumero{1}
+    
+	\newpage
+	\noindent{}{\large{}\textbf{[4,8 pontos] Parte II - Testes}}\par
+	\vspace{1cm}
+
+    \shufflegroup{testes}
+    \insertgroup{testes}
+  }
+\end{document}

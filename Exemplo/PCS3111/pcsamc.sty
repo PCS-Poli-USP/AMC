@@ -1,0 +1,157 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \brief    Estilo para AMC usado no PCS
+
+% \details  Este arquivo é uma personalização do estilo para o software AMC
+%           (auto-multiple choice) utilizado no PCS (Departamento de Engenharia
+%           de Computação e Sistemas Digitais) da Escola Politécnica da
+%           Universidade de São Paulo.
+% \author   Prof. Dr. Bruno de Carvalho Albertini
+% \warning  Contact balbertini at usp dot br
+% \version  20150818
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Changelog:
+% 20150406 - Testes com o AMC, comando AMCcodeT
+% 20150512 - Primeira versão em formato TeX include
+% 20150810 - Transformação em folha de estilo
+% 20150811 - Inclusão dos comandos turma, disciplina e avaliacao
+% 20150818 - Formatação para tornar público
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\NeedsTeXFormat{LaTeX2e}[1994/06/01]
+\ProvidesPackage{pcsamc}[2015/08/10 AMC PCS Customizations]
+
+\RequirePackage{xparse}
+\RequirePackage[box,insidebox]{automultiplechoice}
+%% Defines geometry for A4 letter, see test page for details
+\geometry{hmargin=1.5cm,headheight=2cm,headsep=.3cm,footskip=1cm,top=2.5cm,bottom=2cm}
+
+%% Defines the multi-choices question symbol as null (original is club)
+\def\multiSymbole{}
+%% Portuguese translations
+\def\AMCbeginQuestion#1#2{\par\noindent{\bf Pergunta #1} #2\hspace*{1em}}
+\AMCtext{corrected}{Solução}
+\AMCtext{catalog}{Catálogo}
+\AMCtext{draft}{RASCUNHO}
+\AMCtext{message}{Somente para apreciação dos professores. Não divulgue.}
+% BAlbertini: commented because we already print on open questions
+% \def\AMCotextReserved{\emph{Reservado ao professor(a).}}
+
+\makeatletter
+% Expande tupla num/nome para num nome
+\def\turma#1{\expandafter\turma@i#1\@nil}
+\def\turma@i#1/#2\@nil{\gdef\@turma{\wrongchoice[#1]{#2}\scoring{#1}}}
+\def\@turma{\@latex@warning@no@line{Comando \noexpand\turma faltando.}}
+% Expande a lista de turmas para até 8 turmas
+\def\turmas#1{\expandafter\turmas@i#1,,,,,,,,\@nil}
+\def\turmas@i#1,#2,#3,#4,#5,#6,#7,#8,#9\@nil{%
+    \ifx$#2$ \gdef\@turmas{\turma{#1}\@turma}
+    \else
+    \ifx$#3$ \gdef\@turmas{\turma{#1}\@turma%
+                           \turma{#2}\@turma}
+    \else
+    \ifx$#4$ \gdef\@turmas{\turma{#1}\@turma%
+                           \turma{#2}\@turma%
+                           \turma{#3}\@turma}
+    \else
+	\ifx$#5$ \gdef\@turmas{\turma{#1}\@turma%
+                           \turma{#2}\@turma%
+                           \turma{#3}\@turma%
+						   \turma{#4}\@turma}
+	\else
+	\ifx$#6$ \gdef\@turmas{\turma{#1}\@turma%
+                           \turma{#2}\@turma%
+                           \turma{#3}\@turma%
+						   \turma{#4}\@turma%
+						   \turma{#5}\@turma}
+	\else
+	\ifx$#7$ \gdef\@turmas{\turma{#1}\@turma%
+                           \turma{#2}\@turma%
+                           \turma{#3}\@turma%
+						   \turma{#4}\@turma%
+						   \turma{#5}\@turma%
+						   \turma{#6}\@turma}
+	\else
+	\ifx$#8$ \gdef\@turmas{\turma{#1}\@turma%
+                           \turma{#2}\@turma%
+                           \turma{#3}\@turma%
+						   \turma{#4}\@turma%
+						   \turma{#5}\@turma%
+						   \turma{#6}\@turma%
+						   \turma{#7}\@turma}
+	\else
+    \gdef\@turmas{\turma{#1}\@turma%
+                           \turma{#2}\@turma%
+                           \turma{#3}\@turma%
+						   \turma{#4}\@turma%
+                           \\ %
+						   \turma{#5}\@turma%
+						   \turma{#6}\@turma%
+						   \turma{#7}\@turma%
+						   \turma{#8}\@turma}
+    \fi\fi\fi\fi\fi\fi\fi
+}
+\def\@turmas{\@latex@warning@no@line{Comando \noexpand\turmas faltando.}}
+
+%\def\institute#1{\gdef\@institute{#1}}
+\def\disciplina#1{\@disciplina{#1}}%
+% \def\disciplin@a#1#2{\gdef\d@num{#1}}%\gdef\d@nom{#2}}
+\def\@disciplina#1#2{\gdef\@dnum{#1 - #2}}%
+\def\avaliacao#1{\gdef\@aval{#1}}%
+\def\data#1{\gdef\@data{#1}}%
+
+%% AMCcodeT
+% Este comando imprime a área de marcação para o #USP e turma.
+% \warning Somente para uso interno da folha de estilo.
+\newdimen\AMCcodeHspace\AMCcodeHspace=.5em
+\newdimen\AMCcodeVspace\AMCcodeVspace=.5em
+\newdimen\AMCcodeBoxSep\AMCcodeBoxSep=.1em
+\newcommand{\AMCcodeT}[2]{{
+  \def\AMCbeginQuestion##1##2{}%
+  \setlength{\parindent}{0pt}%
+  \def\AMCbeginAnswer{\hbox\bgroup}%
+  \def\AMCendAnswer{\egroup\vspace{\AMCcodeVspace}\par}%
+  \def\AMCanswer##1##2{
+  \hbox{##1
+   \hspace{\AMCcodeBoxSep}\textbf{##2}}
+  \hspace{\AMCcodeHspace}}%
+  \AMCnobloc%
+  \begin{question}{#1.
+   }\QuestionIndicative%
+   \begin{choicescustom}[o]\scoring{auto=0}%
+    {\@turmas}
+   \end{choicescustom}%
+  \end{question}%
+}}
+
+%% cabecalho
+% Este comando imprime o cabeçalho todo, incluindo turma e #USP
+\newcommand{\cabecalho}{
+  % Reseta o contador de figuras
+  \setcounter{figure}{0}
+  \par{\vspace{1cm}}
+  \noindent{\bf \@dnum \hfill {\@aval} - {\@data}}
+  \par{\vspace{0.5cm}}
+  \begin{minipage}{4.5cm}
+    \AMCcode{nusp}{7}
+  \end{minipage}
+  \begin{minipage}{12cm}
+    \noindent{Utilize caneta azul ou preta para marcar as caixas e preencha a
+    caixa totalmente para correta interpretação. Exemplo: $\blacksquare$.
+    \textbf{Não use $\boxtimes$.}}
+    \par{\vspace{1em}}\textbf{Turma}\\ \AMCcodeT{turma}{1}\hspace*{\fill}
+    \par{\vspace{1em}} Marque as caixas ao lado para formar o seu número USP e
+    escreva seu nome abaixo.\hspace*{\fill}
+    \par{\vspace{1em}}
+    \hfill\namefield{\fbox{
+      \begin{minipage}{12cm}
+        Nome (completo):
+        \par{\vspace*{0.5cm}}\dotfill
+        \par{\vspace*{1mm}}
+      \end{minipage}
+    }}
+  \end{minipage}
+  \par{\vspace{1cm}}
+}
+\makeatother
+
+\endinput
