@@ -15,33 +15,37 @@
 % 20150810 - Transformação em folha de estilo
 % 20150811 - Inclusão dos comandos turma, disciplina e avaliacao
 % 20150818 - Formatação para tornar público
+% 20160812 - Adaptação da data para AMC 1.2.1_5
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \NeedsTeXFormat{LaTeX2e}[1994/06/01]
 \ProvidesPackage{pcsamc}[2015/08/10 AMC PCS Customizations]
 
-\RequirePackage{xparse}
-\RequirePackage[box,insidebox]{automultiplechoice}
-%% Defines geometry for A4 letter, see test page for details
+\RequirePackage[insidebox]{automultiplechoice}
+%% Define a geometria para folha A4
 \geometry{hmargin=1.5cm,headheight=2cm,headsep=.3cm,footskip=1cm,top=2.5cm,bottom=2cm}
 
-%% Defines the multi-choices question symbol as null (original is club)
+%% Retira o símbolo de questão com multiplas alternativas, originalmente o
+%% símbolo no naipe de paus no AMC
 \def\multiSymbole{}
-%% Portuguese translations
-\def\AMCbeginQuestion#1#2{\par\noindent{\bf Pergunta #1} #2\hspace*{1em}}
+%% Traduções para Português do Brasil
+\def\AMCbeginQuestion#1#2{\par\noindent{\bf #1} #2\hspace*{0.1em}}
+\def\AMCformQuestion#1{\vspace{\AMCformVSpace}\par{\makebox[2em][l]{#1}}}
+\def\AMCformAnswer#1{\hspace{\AMCformHSpace} #1}
 \AMCtext{corrected}{Solução}
 \AMCtext{catalog}{Catálogo}
 \AMCtext{draft}{RASCUNHO}
 \AMCtext{message}{Somente para apreciação dos professores. Não divulgue.}
-% BAlbertini: commented because we already print on open questions
+% Comentado pois já imprimimos nas questões abertas
 % \def\AMCotextReserved{\emph{Reservado ao professor(a).}}
 
 \makeatletter
+
 % Expande tupla num/nome para num nome
 \def\turma#1{\expandafter\turma@i#1\@nil}
 \def\turma@i#1/#2\@nil{\gdef\@turma{\wrongchoice[#1]{#2}\scoring{#1}}}
 \def\@turma{\@latex@warning@no@line{Comando \noexpand\turma faltando.}}
-% Expande a lista de turmas para até 8 turmas
+% Expande a lista de turmas para até 4 turmas
 \def\turmas#1{\expandafter\turmas@i#1,,,,,,,,\@nil}
 \def\turmas@i#1,#2,#3,#4,#5,#6,#7,#8,#9\@nil{%
     \ifx$#2$ \gdef\@turmas{\turma{#1}\@turma}
@@ -53,51 +57,37 @@
                            \turma{#2}\@turma%
                            \turma{#3}\@turma}
     \else
-	\ifx$#5$ \gdef\@turmas{\turma{#1}\@turma%
-                           \turma{#2}\@turma%
-                           \turma{#3}\@turma%
-						   \turma{#4}\@turma}
-	\else
-	\ifx$#6$ \gdef\@turmas{\turma{#1}\@turma%
-                           \turma{#2}\@turma%
-                           \turma{#3}\@turma%
-						   \turma{#4}\@turma%
-						   \turma{#5}\@turma}
-	\else
-	\ifx$#7$ \gdef\@turmas{\turma{#1}\@turma%
-                           \turma{#2}\@turma%
-                           \turma{#3}\@turma%
-						   \turma{#4}\@turma%
-						   \turma{#5}\@turma%
-						   \turma{#6}\@turma}
-	\else
-	\ifx$#8$ \gdef\@turmas{\turma{#1}\@turma%
-                           \turma{#2}\@turma%
-                           \turma{#3}\@turma%
-						   \turma{#4}\@turma%
-						   \turma{#5}\@turma%
-						   \turma{#6}\@turma%
-						   \turma{#7}\@turma}
-	\else
     \gdef\@turmas{\turma{#1}\@turma%
-                           \turma{#2}\@turma%
-                           \turma{#3}\@turma%
-						   \turma{#4}\@turma%
-                           \\ %
-						   \turma{#5}\@turma%
-						   \turma{#6}\@turma%
-						   \turma{#7}\@turma%
-						   \turma{#8}\@turma}
-    \fi\fi\fi\fi\fi\fi\fi
+                            \turma{#2}\@turma%
+                            \turma{#3}\@turma%
+                            \turma{#4}\@turma}
+    \fi\fi\fi
 }
 \def\@turmas{\@latex@warning@no@line{Comando \noexpand\turmas faltando.}}
 
-%\def\institute#1{\gdef\@institute{#1}}
-\def\disciplina#1{\@disciplina{#1}}%
-% \def\disciplin@a#1#2{\gdef\d@num{#1}}%\gdef\d@nom{#2}}
-\def\@disciplina#1#2{\gdef\@dnum{#1 - #2}}%
-\def\avaliacao#1{\gdef\@aval{#1}}%
-\def\data#1{\gdef\@data{#1}}%
+%% Data no formato abaixo. Não utilize zeros à esquerda.
+%% \data{dia}{mês}{ano}
+%% \data{16}{2}{2015}
+\newcommand{\data}[3]{\gdef\@data{\ifnum#1<10 0\fi#1/\ifnum#2<10 0\fi#2/#3}\gdef\@semestre{#3S\ifnum#2>6 2\else 1\fi}}
+\def\@data{\@latex@warning@no@line{Comando \noexpand\data faltando.}}
+% Comentado pois o semestre é inferido da data (se estiver faltando reclamará).
+%\def\@semestre{\@latex@warning@no@line{Comando \noexpand\data faltando.}}
+
+%% Avaliação no formato (e.g.) abaixo:
+%% \avaliacao{Primeira Prova}
+\newcommand{\avaliacao}[1]{\gdef\@avaliacao{#1}}
+
+%% Doação dos caracteres para estudo de OCR
+%% Comando não ativo, não utilizar
+\newcommand{\doar}{\gdef\@doar{}}
+% %% Doação dos caracteres para estudo de OCR
+% %% Comando não ativo, não utilizar
+% \newcommand{\doar}{\@doar{Doar minhas letras manuscritas para pesquisa.}}
+
+%% Disciplina no formato:
+%% \disciplina{código}{nome}
+%% \disciplina{PCS3115}{Sistemas Digitais I}
+\newcommand{\disciplina}[2]{\gdef\@dcod{#1}\gdef\@dnome{#2}}
 
 %% AMCcodeT
 % Este comando imprime a área de marcação para o #USP e turma.
@@ -123,24 +113,53 @@
   \end{question}%
 }}
 
+%% AMCcodeDoar
+% Este comando imprime a área de marcação para a doação dos caracteres manuscritos para pesquisa em OCR. Solicitado pelo Gomi, caso o aluno marque esta opção, aparecerá a marcação "1" na planilha de notas para esta coluna. Neste caso, envie-o o(s) PDF(s) da(s) prova(s).
+% \warning Somente para uso interno da folha de estilo.
+\newcommand{\AMCcodeDoar}[2]{{
+  \def\AMCbeginQuestion##1##2{}%
+  \setlength{\parindent}{0pt}%
+  \def\AMCbeginAnswer{\hbox\bgroup}%
+  \def\AMCendAnswer{\egroup\vspace{\AMCcodeVspace}\par}%
+  \def\AMCanswer##1##2{
+  \hbox{##1
+   \hspace{\AMCcodeBoxSep}{##2}}
+  \hspace{\AMCcodeHspace}}%
+  \AMCnobloc%
+  \begin{question}{#1.
+   }\QuestionIndicative%
+   \begin{choicescustom}[o]%
+    {\wrongchoice[ ]{Concordo em doar minhas letras manuscritas para pesquisa em OCR.}\scoring{1}}
+   \end{choicescustom}%
+  \end{question}%
+}}
+
 %% cabecalho
 % Este comando imprime o cabeçalho todo, incluindo turma e #USP
 \newcommand{\cabecalho}{
   % Reseta o contador de figuras
   \setcounter{figure}{0}
-  \par{\vspace{1cm}}
-  \noindent{\bf \@dnum \hfill {\@aval} - {\@data}}
+  %
   \par{\vspace{0.5cm}}
-  \begin{minipage}{4.5cm}
-    \AMCcode{nusp}{7}
+  \noindent{\bf {\@dcod} - {\@dnome} - {\@semestre} \hfill {\@avaliacao} - {\@data}}
+  %
+  \par{\vspace{0.5cm}}
+  \begin{minipage}{5cm}
+    \AMCcode{nusp}{8}
   \end{minipage}
+  %
   \begin{minipage}{12cm}
     \noindent{Utilize caneta azul ou preta para marcar as caixas e preencha a
     caixa totalmente para correta interpretação. Exemplo: $\blacksquare$.
     \textbf{Não use $\boxtimes$.}}
-    \par{\vspace{1em}}\textbf{Turma}\\ \AMCcodeT{turma}{1}\hspace*{\fill}
-    \par{\vspace{1em}} Marque as caixas ao lado para formar o seu número USP e
-    escreva seu nome abaixo.\hspace*{\fill}
+    % Se essa opção estiver no arquivo de provas (.tex), gera campo para concordância sobre a doação dos caracteres manuscritos.
+    \ifdefined\@doar%
+      \par{\vspace{2em}}\AMCcodeDoar{doar}{1}\hspace*{\fill}%
+    \else%
+      \par{\vspace{2em}}\hspace*{\fill}%
+    \fi
+    % \par{\vspace{2em}}\AMCcodeT{turma}{1}\hspace*{\fill}
+    \par{\vspace{1em}} Marque as caixas ao lado para formar o seu número USP, as caixas acima para sua turma, escreva sua bancada acima e seu nome abaixo.\hspace*{\fill}
     \par{\vspace{1em}}
     \hfill\namefield{\fbox{
       \begin{minipage}{12cm}
@@ -150,7 +169,7 @@
       \end{minipage}
     }}
   \end{minipage}
-  \par{\vspace{1cm}}
+  \par{\vspace{0.5cm}}
 }
 \makeatother
 
