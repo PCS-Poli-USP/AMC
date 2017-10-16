@@ -6,7 +6,7 @@
 %%
 %% automultiplechoice.dtx  (with options: `package')
 %% 
-%% Copyright (C) 2008-2013 Alexis Bienvenue
+%% Copyright (C) 2008-2015 Alexis Bienvenue
 %% 
 %% This file is part of Auto-Multiple-Choice
 %% 
@@ -31,7 +31,8 @@
 \RequirePackage{bophook} % \AtBeginPage
 \RequirePackage{xkeyval} % \setkeys
 \RequirePackage{rotating} % \rotatebox
-\def\AMC@VERSION{AMC 1.2.1 svn:1403 with style $Revision: 431 $}
+\RequirePackage{fancybox} % \boxput
+\def\AMC@VERSION{AMC 1.3.0 r:6551ff313e87}
 \newwrite\AMC@logfile
 \immediate\openout\AMC@logfile=\jobname.amc
 \def\AMC@amclog#1{\immediate\write\AMC@logfile{#1}}
@@ -54,8 +55,10 @@
 \newif\ifAMC@affichekeys\AMC@affichekeysfalse
 \newif\ifAMC@correc\AMC@correcfalse
 \newif\ifAMC@qbloc\AMC@qblocfalse
+\newif\ifAMC@asqbloc\AMC@asqblocfalse
 \newif\ifAMC@rbloc\AMC@rblocfalse
 \newif\ifAMCcomplete@multi\AMCcomplete@multifalse
+\newif\ifAMCquestionNumber\AMCquestionNumbertrue
 \newif\ifAMC@calibration\AMC@calibrationfalse
 \newif\ifAMC@plain\AMC@plainfalse
 \newif\ifAMCune@bonne
@@ -70,6 +73,7 @@
 \newif\ifAMC@pagelayout\AMC@pagelayouttrue
 \newif\ifAMC@postcorrect\AMC@postcorrectfalse
 \newif\ifAMC@automarks\AMC@automarksfalse
+\newif\ifAMC@invisible\AMC@invisiblefalse
 \let\AMCcompleteMulti=\AMCcomplete@multitrue
 \let\AMCnoCompleteMulti=\AMCcomplete@multifalse
 \def\AMCid@name{}
@@ -83,8 +87,8 @@
 \newif\ifAMCids@side
 \newdimen\AMCids@width
 \newdimen\AMCids@height
-\define@choicekey*{AMCids}{pos}[\var\nr]{none,top,side}{%
-  \ifcase\nr\relax
+\define@choicekey*{AMCids}{pos}[\AMCidsVar\AMCidsVarN]{none,top,side}{%
+  \ifcase\AMCidsVarN\relax
     \AMCids@topfalse\AMCids@sidefalse
   \or
     \AMCids@toptrue\AMCids@sidefalse
@@ -97,6 +101,7 @@
 \def\AMCidsPosition#1{\setkeys{AMCids}{#1}}
 \AMCidsPosition{pos=side,width=4cm,height=3ex}
 \def\AMCtext#1#2{\expandafter\def\csname AMC@loc@#1\endcsname{#2}}
+\def\AMClocalized#1{\csname AMC@loc@#1\endcsname}
 \def\AMC@loc@draft{DRAFT}
 \def\AMC@loc@message{For your examination, preferably print
   documents compiled from auto-multiple-choice.}
@@ -104,7 +109,11 @@
 \def\AMC@loc@q#1#2{\textbf{Question #1} #2}
 \def\AMC@loc@corrected{Corrected}
 \def\AMC@loc@catalog{Catalog}
+\def\AMC@loc@explain{\textit{\textbf{Explanation: }}}
 \def\AMC@loc@none{None of these answers are correct.}
+\def\AMC@loc@question{question}
+\def\AMC@loc@questions{questions}
+\def\AMC@loc@namesurname{Name and surname:}
 \def\AMC@loc@NL{
   \def\AMC@loc@draft{Ontwerp}
   \def\AMC@loc@message{Gebruik bij uw proefwerk bij voorkeur die
@@ -114,6 +123,8 @@
   \def\AMC@loc@corrected{Correctie}
   \def\AMC@loc@catalog{Catalogus}
   \def\AMC@loc@none{Geen van de antwoorden is juist.}
+  \def\AMC@loc@question{vraag}
+  \def\AMC@loc@questions{vragen}
 }
 \def\AMC@loc@FR{
   \def\AMC@loc@draft{PROJET}
@@ -123,7 +134,11 @@
   \def\AMC@loc@q##1##2{\textbf{Question ##1} ##2}
   \def\AMC@loc@corrected{Correction}
   \def\AMC@loc@catalog{Catalogue}
+  \def\AMC@loc@explain{\textit{\textbf{Explication : }}}
   \def\AMC@loc@none{Aucune de ces r\'eponses n'est correcte.}
+  \def\AMC@loc@question{question}
+  \def\AMC@loc@questions{questions}
+  \def\AMC@loc@namesurname{Nom et pr\'enom :}
 }
 \def\AMC@loc@DE{
   \def\AMC@loc@draft{ENTWURF}
@@ -133,7 +148,10 @@
   \def\AMC@loc@q##1##2{\textbf{Frage ##1} ##2}
   \def\AMC@loc@corrected{Korrektur}
   \def\AMC@loc@catalog{Katalog}
+  \def\AMC@loc@explain{\textit{\textbf{Erkl\"arung : }}}
   \def\AMC@loc@none{Keine dieser Antworten ist korrekt.}
+  \def\AMC@loc@question{Frage}
+  \def\AMC@loc@questions{Fragen}
 }
 \def\AMC@loc@IT{
   \def\AMC@loc@draft{BOZZA}
@@ -144,6 +162,8 @@
   \def\AMC@loc@corrected{Correzione}
   \def\AMC@loc@catalog{Catalogo}
   \def\AMC@loc@none{Nessuna risposta \`e giusta.}
+  \def\AMC@loc@question{domanda}
+  \def\AMC@loc@questions{domande}
 }
 \def\AMC@loc@NO{
   \def\AMC@loc@draft{UTKAST}
@@ -154,6 +174,20 @@
   \def\AMC@loc@corrected{Rettet}
   \def\AMC@loc@catalog{Katalog}
   \def\AMC@loc@none{Ingen svar er riktige.}
+  \def\AMC@loc@question{oppgave}
+  \def\AMC@loc@questions{oppgave}
+}
+\def\AMC@loc@PT{
+  \def\AMC@loc@draft{RASCUNHO}
+  \def\AMC@loc@message{Para o seu exame, use preferencialmente documentos compilados do auto-multiple-choice.}
+  \def\AMC@loc@qf##1{\textbf{Quest\~ao ##1:}}
+  \def\AMC@loc@q##1##2{\textbf{Quest\~ao ##1} ##2}
+  \def\AMC@loc@corrected{Corrigido}
+  \def\AMC@loc@catalog{Cat\'alogo}
+  \def\AMC@loc@explain{\textit{\textbf{Justifique: }}}
+  \def\AMC@loc@none{Nenhuma das respostas apresentadas est\'a correta.}
+  \def\AMC@loc@question{Quest\~ao}
+  \def\AMC@loc@questions{Quest\~oes}
 }
 \def\AMC@loc@ES{
   \def\AMC@loc@draft{BORRADOR}
@@ -164,6 +198,8 @@
   \def\AMC@loc@corrected{Correcci\'on}
   \def\AMC@loc@catalog{Cat\'alogo}
   \def\AMC@loc@none{Ninguna de estas preguntas son correctas.}
+  \def\AMC@loc@question{pregunta}
+  \def\AMC@loc@questions{preguntas}
 }
 \def\AMC@loc@JA{
   \def\AMC@loc@draft{ドラフト}
@@ -172,8 +208,15 @@
   \def\AMC@loc@q##1##2{\textbf{問##1} ##2}
   \def\AMC@loc@corrected{模範解答}
   \def\AMC@loc@catalog{問題カタログ}
+  \def\AMC@loc@explain{\textit{\textbf{解説: }}}
   \def\AMC@loc@none{該当なし。}
+  \def\AMC@loc@question{問}
+  \def\AMC@loc@questions{問}
 }
+\AtBeginDocument{\@ifpackageloaded{cleveref}{%
+    \crefalias{AMCquestionaff}{question}%
+    \crefname{question}{\AMC@loc@question}{\AMC@loc@questions}%
+}{}}%
 \ifx\AMC@SR\undefined\newcount\AMC@SR\fi
 \providecommand\AMC@SRconst{2097152}
 \providecommand\AMC@SRset[1]{\global\AMC@SR#1 \ignorespaces}
@@ -206,18 +249,23 @@
   \advance\AMC@SRnum by -\AMC@SR@count%
 }
 \newcount\AMC@sti
+\newcount\AMC@stil
 \newtoks\AMCsw@p@
 \newcommand\AMCsw@p[2]{%
   \global\AMCsw@p@=#1%
   \global#1=#2%
   \global#2=\AMCsw@p@}
-\newcommand\AMC@shuffletoks[2]{%
-  \AMC@sti=#1\relax%
-  \@whilenum\AMC@sti>\@ne\do{%
-    \AMC@SRmax{\AMC@sti}\advance\AMC@SRnum\@ne\relax%
-    \AMCsw@p{\csname #2\romannumeral\AMC@SRnum\endcsname}%
-            {\csname #2\romannumeral\AMC@sti\endcsname}%
+\newcommand{\AMC@shuffletoks}[3][\@ne]{%
+  \AMC@sti=#2\relax%
+  \AMC@stil=#2\relax%
+  \advance\AMC@stil\@ne%
+  \advance\AMC@stil -#1\relax%
+  \@whilenum\AMC@sti>#1\do{%
+    \AMC@SRmax{\AMC@stil}\advance\AMC@SRnum #1\relax%
+    \AMCsw@p{\csname #3\romannumeral\AMC@SRnum\endcsname}%
+            {\csname #3\romannumeral\AMC@sti\endcsname}%
     \advance\AMC@sti\m@ne\relax%
+    \advance\AMC@stil\m@ne\relax%
   }}
 \newcount\AMC@numerotation\AMC@numerotation=\z@%
 \def\AMC@definitnumero#1#2{\AMC@amclog{AUTOQCM[NUM=#1=#2]^^J}%
@@ -227,6 +275,7 @@
   \expandafter\AMC@definitnumero\expandafter{\the\AMC@numerotation}{#1}\fi}
 \def\AMC@unnumero#1{\AMC@prepare{#1}\csname AMC@numtab@#1\endcsname}
 \def\AMC@affecte#1#2{\AMC@prepare{#1}\global#2=\csname AMC@numtab@#1\endcsname}
+\def\AMC@shapename@{\ifAMC@invisible none\else\AMC@shapename\fi}
 \def\AMC@tracepos#1#2{%
   \ifAMC@calibration\ifx\@empty#1\@empty\else%
   \pdfsavepos\protected@write\AMC@XYFILE{}{%
@@ -274,32 +323,84 @@
   \let\AMC@XYFILE=\AMC@XYspecial%
 }{\let\AMC@XYFILE=\AMC@tmpXY\closeout\AMC@XYspecial}
 \newcommand{\namefield}[1]{\AMC@tracebox{1}{nom}{#1}}
-\def\AMC@boxcolor{black}
-\newcommand\AMCboxColor[1]{%
-  \def\AMC@boxcolor{#1}}
-\newcommand\AMC@boxedchar[4]{\AMC@LR{\hspace{0pt}%
-  {\ifx\@empty#2\@empty \def\AMC@boxcolor{black}\fi%
-   \ifAMC@correc\def\AMC@boxcolor{black}\fi%
-   \lower\AMC@boxeddown\hbox{\csname AMC@shape@\AMC@shapename\endcsname%
-     {\AMC@boxcolor}%
-     {\ifx\@empty#4\@empty white\else\AMC@boxcolor\fi}{#2}{#3}{\AMCchoiceLabelFormat{#1}}}}}%
+\let\AMC@new@savebox=\newsavebox
+\let\AMC@save@box=\savebox
+\let\AMC@use@box=\usebox
+\newif\ifAMC@draw@cross
+\newcommand\AMC@setcolors@[2]{%
+  \def\AMC@boxcolor@{\AMC@boxcolor}%
+  \ifx\@empty#1\@empty \def\AMC@boxcolor@{black}\fi%
+  \ifAMC@correc\def\AMC@boxcolor@{black}\fi%
+  \def\AMC@fillcolor@{\ifx\@empty#2\@empty white\else\AMC@boxcolor@\fi}%
+  \AMC@draw@crossfalse%
+  \ifKV@AMCdim@cross\ifx\@empty#2\@empty\else\AMC@draw@crosstrue\fi\fi%
 }
-\newcommand\AMC@shape@square[5]{%
+\newcommand\AMC@answerBox@[4]{%
+  \AMC@LR{\hspace{0pt}%
+    \lower\AMC@boxeddown\hbox{\csname AMC@shape@\AMC@shapename@\endcsname%
+      {\AMCchoiceLabelFormat{#1}}{#2}{#3}{#4}}}%
+}
+\newcommand\AMC@shapeprepare@square{}
+\newcommand\AMC@shape@square[4]{%
   \fboxsep=\z@\fboxrule=\AMC@boxedrule%
-  \fcolorbox{#1}{#2}%
-  {\vbox to \AMC@boxedheight{\AMC@tracepos{#3}{#4}\vfill %
-      \hbox to \AMC@boxedwidth{\hfill{\textcolor{#1}{#5}}\hfill}\vfill}%
-    \AMC@tracepos{#3}{#4}}}
-\newcommand\AMC@shape@oval[5]{%
-\AMC@tracebox{#3}{#4}{\begin{tikzpicture}%
-\useasboundingbox (-0.5\AMC@boxedwidth,0.5\AMC@boxedheight)
-  rectangle (0.5\AMC@boxedwidth,-0.5\AMC@boxedheight);
-\draw[#1,fill=#2,line width=\AMC@boxedrule,rounded corners=\AMC@oval@radius]
-  (-0.5\AMC@boxedwidth,0.5\AMC@boxedheight)
-  rectangle (0.5\AMC@boxedwidth,-0.5\AMC@boxedheight);
-\draw[#1] (0,0) node {#5};
-\end{tikzpicture}}%
+  \AMC@setcolors@{#3}{#2}%
+  \ifKV@AMCdim@cross\def\AMC@fillcolor@{white}\fi%
+  \fcolorbox{\AMC@boxcolor@}{\AMC@fillcolor@}%
+  {%
+    \boxput*(0,0){%
+      \ifAMC@draw@cross\AMC@crosschar\fi%
+    }{%
+    \vbox to \AMC@boxedheight{%
+      \AMC@tracepos{#3}{#4}%
+      \vfill%
+      \hbox to \AMC@boxedwidth{\hfill%
+          \textcolor{\AMC@boxcolor@}{#1}%
+        \hfill}\vfill}}%
+    \AMC@tracepos{#3}{#4}}%
 }
+\newcommand\AMC@makeovalbox[3]{%
+  \AMC@setcolors@{#1}{#2}%
+  \ifKV@AMCdim@cross\def\AMC@fillcolor@{white}\fi%
+  \AMC@save@box{#3}{%
+    \begin{tikzpicture}%
+      \useasboundingbox (-0.5\AMC@boxedwidth-0.5\AMC@boxedrule,0.5\AMC@boxedheight+0.5\AMC@boxedrule)
+      rectangle (0.5\AMC@boxedwidth+0.5\AMC@boxedrule,-0.5\AMC@boxedheight-0.5\AMC@boxedrule);
+      \draw[\AMC@boxcolor@,fill=\AMC@fillcolor@,line width=\AMC@boxedrule,rounded corners=\AMC@oval@radius]
+      (-0.5\AMC@boxedwidth,0.5\AMC@boxedheight)
+      rectangle (0.5\AMC@boxedwidth,-0.5\AMC@boxedheight);
+      \ifAMC@draw@cross
+        \draw[\AMC@boxcolor@,line width=\AMC@crossrule]
+        (-0.5\AMC@boxedwidth,0.5\AMC@boxedheight) -- (0.5\AMC@boxedwidth,-0.5\AMC@boxedheight)
+        (0.5\AMC@boxedwidth,0.5\AMC@boxedheight) -- (-0.5\AMC@boxedwidth,-0.5\AMC@boxedheight);
+      \fi
+    \end{tikzpicture}}%
+}
+\newcommand\AMC@shapeprepare@oval{%
+  \AMC@makeovalbox{1}{}{\AMC@ovalbox@R}%
+  \AMC@makeovalbox{1}{1}{\AMC@ovalbox@RF}%
+  \AMC@makeovalbox{}{}{\AMC@ovalbox@}%
+  \AMC@makeovalbox{}{1}{\AMC@ovalbox@F}%
+}
+\newcommand\AMC@shape@oval[4]{%
+  \AMC@setcolors@{#3}{#2}%
+  \AMC@tracebox{#3}{#4}{\boxput*(0,0){\textcolor{\AMC@boxcolor@}{#1}}{%
+      \ifx\@empty#3\@empty%
+        \ifx\@empty#2\@empty%
+          \AMC@use@box{\AMC@ovalbox@}%
+        \else%
+          \AMC@use@box{\AMC@ovalbox@F}%
+        \fi%
+      \else%
+        \ifx\@empty#2\@empty%
+          \AMC@use@box{\AMC@ovalbox@R}%
+        \else%
+          \AMC@use@box{\AMC@ovalbox@RF}%
+        \fi%
+      \fi%
+    }}%
+}
+\newcommand\AMC@shapeprepare@none{}
+\newcommand\AMC@shape@none[4]{ #1 }
 \def\AMCchoiceLabel#1{%
   \ifAMC@inside@digit\arabic{#1}%
   \else\Alph{#1}\fi%
@@ -307,43 +408,55 @@
 \def\AMCchoiceLabelFormat#1{#1}
 \newcounter{AMC@ncase}
 \setcounter{AMC@ncase}{0}
-\newcommand\AMC@caselettre[4]{%
-  \AMC@boxedchar{\ifx\@empty#1\@empty%
+\newcommand\AMC@answerBox[4]{%
+  \AMC@answerBox@{\ifx\@empty#1\@empty%
     \AMCchoiceLabel{AMC@ncase}%
     \else #1\fi}{#2}{#3}{#4}}
 \newlength\AMC@boxedrule
+\newlength\AMC@crossrule
 \newlength\AMC@boxeddown
 \newlength\AMC@boxedwidth
 \newlength\AMC@boxedheight
 \newlength\AMC@oval@radius
-\define@choicekey{AMCdim}{shape}{square,oval}{\def\AMC@shapename{#1}}
+\newlength\AMC@outside@sep
+\define@choicekey{AMCdim}{shape}{square,oval,none}{\def\AMC@shapename{#1}}
 \define@key{AMCdim}{size}{\AMC@boxedwidth=#1\AMC@boxedheight=#1}
 \define@key{AMCdim}{height}{\AMC@boxedheight=#1}
 \define@key{AMCdim}{width}{\AMC@boxedwidth=#1}
 \define@key{AMCdim}{rule}{\AMC@boxedrule=#1}
+\define@key{AMCdim}{outsidesep}{\AMC@outside@sep=#1}
 \define@key{AMCdim}{down}{\AMC@boxeddown=#1}
-\def\AMCboxDimensions#1{%
+\define@key{AMCdim}{color}{\def\AMC@boxcolor{#1}}
+\define@boolkey{AMCdim}{cross}[false]{}
+\define@key{AMCdim}{crosschar}[\textbf{\textsf{X}}]{\def\AMC@crosschar{#1}}
+\define@key{AMCdim}{crossrule}[1.5pt]{\AMC@crossrule=#1}
+\def\AMCboxStyle#1{%
   \setkeys{AMCdim}{#1}%
   \ifnum\AMC@boxedwidth<\AMC@boxedheight%
     \AMC@oval@radius=\AMC@boxedwidth\divide\AMC@oval@radius\tw@%
   \else%
     \AMC@oval@radius=\AMC@boxedheight\divide\AMC@oval@radius\tw@%
   \fi%
+  \csname AMC@shapeprepare@\AMC@shapename@ \endcsname%
 }
-\AMCboxDimensions{shape=square,size=2.5ex,down=.4ex,rule=.5pt}
-\newcommand\AMCformBox[4]{%
+\AMCboxStyle{shape=square,size=2.5ex,down=.4ex,rule=.5pt,outsidesep=.1em,color=black,cross,crosschar,crossrule}
+\newcommand\AMCboxColor[1]{\AMCboxStyle{color=#1}}
+\let\AMCboxDimensions=\AMCboxStyle
+\def\AMCoutsideLabelFormat#1{#1}
+\newcommand\AMCboxOutsideLetter[2]{#1\nobreak\hspace{.1em}\AMCoutsideLabelFormat{#2}}
+\newcommand\AMC@formBox@[4]{%
   \ifAMC@outside@box% letter to be written outside the box
-    \AMC@boxedchar{}{#3}{#4}{#2}\hspace{.1em}{\textbf{#1}}%
+    \AMCboxOutsideLetter{\AMC@answerBox@{}{#2}{#3}{#4}}{#1}%
   \else%
-    \AMC@boxedchar{#1}{#3}{#4}{#2}%
+    \AMC@answerBox@{#1}{#2}{#3}{#4}%
   \fi%
 }
 \newcommand\AMC@formBox[4]{%
-  \AMCformBox{\ifx\@empty#1\@empty%
+  \AMC@formBox@{\ifx\@empty#1\@empty%
     \AMCchoiceLabel{AMC@ncase}%
     \else #1\fi}{#2}{#3}{#4}%
 }
-\newcommand{\AMC@marque}[2]{%
+\newcommand{\AMC@box}[2]{%
   \ifAMC@ensemble%
     \ifAMC@zoneformulaire% for codes inside form sheet
       \protect\AMC@formBox{#1}{#2}{1}{case:\AMCid@name:\the\AMCid@quest,\the\AMCrep@count}%
@@ -351,14 +464,30 @@
       \ifAMCformulaire@dedans% for answer boxes inside form sheet
         \protect\AMC@formBox{#1}{#2}{1}{case:\AMCid@name:\the\AMCid@quest,\the\AMCrep@count}%
       \else% outside form sheet: not to be read during data capture
-        \AMC@caselettre{#1}{}{}{#2}%
+        \AMC@answerBox{#1}{#2}{1}{casequestion:\AMCid@name:\the\AMCid@quest,\the\AMCrep@count}%
     \fi\fi%
   \else% no separate sheet for answers: always read
     \ifAMC@inside@box%
-      \AMC@caselettre{#1}{1}{case:\AMCid@name:\the\AMCid@quest,\the\AMCrep@count}{#2}%
+      \AMC@answerBox{#1}{#2}{1}{case:\AMCid@name:\the\AMCid@quest,\the\AMCrep@count}%
     \else%
-      \AMC@boxedchar{}{1}{case:\AMCid@name:\the\AMCid@quest,\the\AMCrep@count}{#2}%
+      \AMC@answerBox@{}{#2}{1}{case:\AMCid@name:\the\AMCid@quest,\the\AMCrep@count}%
     \fi%
+  \fi%
+}
+\newif\ifAMCsz@logged\AMCsz@loggedfalse
+\newcommand{\AMCscoreZone}[1]{%
+  \ifAMC@ensemble%
+    \ifAMCformulaire@dedans%
+      \AMC@tracebox{1}{score::\the\AMCid@quest,-1}{#1}%
+    \else%
+      \AMC@tracebox{1}{scorequestion::\the\AMCid@quest,-1}{#1}%
+    \fi%
+  \else%
+    \AMC@tracebox{1}{score::\the\AMCid@quest,-1}{#1}%
+  \fi%
+  \ifAMCsz@logged\else%
+    \AMC@amclog{AUTOQCM[VAR:scorezones=1]^^J}%
+    \global\AMCsz@loggedtrue%
   \fi%
 }
 \def\AMCid@checkmax{60}
@@ -373,12 +502,12 @@
 \newcount\AMCbin@id
 \newcount\AMCbin@digit
 \def\AMCbin@one{\advance\AMCbin@digit\@ne%
-  \AMC@boxedchar{}{1}{chiffre:\the\AMCbin@id,\the\AMCbin@digit}{1}}
+  \AMC@answerBox@{}{1}{1}{chiffre:\the\AMCbin@id,\the\AMCbin@digit}}
 \def\AMCbin@zero{\advance\AMCbin@digit\@ne%
-  \AMC@boxedchar{}{1}{chiffre:\the\AMCbin@id,\the\AMCbin@digit}{}}
+  \AMC@answerBox@{}{}{1}{chiffre:\the\AMCbin@id,\the\AMCbin@digit}}
 \def\AMCbin@begin#1{\AMCbin@id=#1\AMCbin@digit=\z@}
 \newcommand{\AMC@binaryBoxes}[2][1]{%
-{\AMCboxDimensions{shape=square,size=.32cm,down=0pt,rule=.2pt}\AMCbin@sequence={}\AMCbin@number=#2\relax%
+{\AMCboxDimensions{shape=square,size=.32cm,down=0pt,rule=.2pt,cross=false}\AMCbin@sequence={}\AMCbin@number=#2\relax%
 \AMCbin@ndigits=\z@%
 \loop%
 \ifnum\AMCbin@number>\z@%
@@ -391,13 +520,27 @@
 \ifnum\AMCbin@ndigits<#1\advance\AMCbin@ndigits\@ne%
 \AMCbin@sequence=\expandafter{\expandafter\AMCbin@zero\the\AMCbin@sequence}\repeat%
 \the\AMCbin@sequence%
+\ifnum\AMCbin@ndigits>#1\PackageError{automultiplechoice}{Too low AMC@NCB value (got #1 but needs \the\AMCbin@ndigits)}{Number of available digits is #1, but needs \the\AMCbin@ndigits}\fi%
 }}
+\def\AMCcurrentenv{document}
+\def\AMCif@env#1{
+    \def\AMC@tempenv{#1}%
+    \ifx\AMC@tempenv\AMCcurrentenv
+        \expandafter\@firstoftwo
+    \else
+        \expandafter\@secondoftwo
+    \fi
+}
 \newcount\AMCtok@k
 \newcount\AMCtok@max
+\newcount\AMCtok@size
 \newcommand{\nouveaugroupe}[2]{%
-  \expandafter\ifx\csname #1@k\endcsname\relax
+  \expandafter\ifx\csname #1@k\endcsname\relax%
     \expandafter\newcount\csname #1@k\endcsname%
-    \csname #1@k\endcsname=\z@%
+    \expandafter\newcount\csname AMC#1@j\endcsname%
+    \csname #1@k\endcsname=\z@\relax%
+    \csname AMC#1@j\endcsname=\z@\relax%
+    \setgroupmode{#1}{\AMCdefault@groupmode}%
   \fi%
 }
 \newcommand\AMC@prepare@element[1]{%
@@ -411,38 +554,119 @@
   \AMC@prepare@element{#1}%
   \csname #1@\romannumeral\AMCtok@k\endcsname={#2}%
 }
+\def\AMCdefault@groupmode{fixed}
+\newcommand{\setdefaultgroupmode}[1]{\def\AMCdefault@groupmode{#1}}
+\newcommand{\setgroupmode}[2]{%
+  \expandafter\ifx\csname AMCgrouppre@#2\endcsname\relax%
+    \PackageError{automultiplechoice}{Unknown group mode for #1 : #2}%
+       {You asked to set group '#1' mode to '#2',
+         but '#2' is not a valid group mode}%
+  \else%
+    \expandafter\global\expandafter\def\csname AMC#1@mode\endcsname{#2}%
+  \fi%
+}
+\newcommand{\AMCgrouppre@fixed}[3]{%
+  \ifnum#3<\z@%
+    \csname AMC#1@j\endcsname=\z@%
+  \else%
+    \csname AMC#1@j\endcsname=#3%
+  \fi%
+}
+\newcommand{\AMCgrouppre@withreplacement}[3]{%
+  \ifnum#3<\z@%
+    \csname AMC#1@j\endcsname=\z@%
+  \else%
+    \csname AMC#1@j\endcsname=#3%
+  \fi%
+  \shufflegroup{#1}%
+}
+\newcount\AMC@imax
+\newcommand{\AMCgrouppre@withoutreplacement}[3]{%
+  \ifnum#3<\z@%
+  \else%
+    \csname AMC#1@j\endcsname=#3%
+  \fi%
+  \ifnum\AMCtok@ik=\AMCloop@k%
+    \AMCtok@ik=\z@%
+  \fi%
+  \ifnum\AMCtok@ik=\z@%
+    \shufflegroup{#1}%
+  \else%
+    \AMC@imax=\AMCloop@k%
+    \advance\AMC@imax -#2\relax%
+    \ifnum\AMCtok@ik>\AMC@imax%
+      \shufflegroupslice{#1}{\@ne}{\AMCtok@ik}%
+      \ifnum\AMCtok@ik<\AMCloop@k%
+        \advance\AMCtok@ik\@ne%
+        \shufflegroupslice{#1}{\AMCtok@ik}{\AMCloop@k}%
+      \fi%
+    \fi%
+  \fi%
+}
+\newcommand{\AMCgrouppre@cyclic}[3]{%
+  \ifnum#3<\z@%
+  \else%
+    \csname AMC#1@j\endcsname=#3%
+  \fi%
+}
+\newcommand{\AMCgroup@pre}[4]{%
+  \csname AMCgrouppre@#1\endcsname{#2}{#3}{#4}%
+}
 \newcommand{\shufflegroup}[1]{%
   \ifAMC@shuffleG{\AMC@shuffletoks{\number\csname #1@k\endcsname}{#1@}}\fi%
 }
+\newcommand{\shufflegroupslice}[3]{%
+  \ifAMC@shuffleG{\AMC@shuffletoks[#2]{#3}{#1@}}\fi%
+}
 \newcount\AMCtok@ik
-\newcommand{\insertgroup}[2][0]{%
-  \AMCtok@max=#1\relax%
-  \ifAMC@fullGroups\AMCtok@max=\z@\fi%
-  \ifnum\the\AMCtok@max<1%
-    \AMCtok@max=\csname #2@k\endcsname%
+\newcount\AMCloop@k
+\newcommand{\AMCgrouploop@prep}[3]{%
+  \AMCtok@size=#1\relax%
+  \ifAMC@fullGroups\AMCtok@size=\z@\fi%
+  \ifnum\AMCtok@size<\@ne%
+    \AMCtok@size=\csname #2@k\endcsname%
   \fi%
-  \AMCtok@ik=\z@%
+  \AMCtok@ik=\csname AMC#2@j\endcsname%
+  \AMCloop@k=\csname #2@k\endcsname%
+  \expandafter\ifx\csname AMC#2@mode\endcsname\relax%
+    \PackageError{automultiplechoice}{No group mode for #2}%
+       {No mode has been defined for group '#2'. This should not occur...}%
+  \fi%
+  \AMCgroup@pre{\csname AMC#2@mode\endcsname}{#2}{\the\AMCtok@size}{#3}%
+}
+\newcommand{\AMCgrouploop@next}[1]{%
+  \global\advance\csname AMC#1@j\endcsname\@ne\relax%
+  \expandafter\ifnum\csname AMC#1@j\endcsname>\AMCloop@k\relax%
+    \global\csname AMC#1@j\endcsname=\@ne%
+  \fi%
+  \AMCtok@ik=\csname AMC#1@j\endcsname%
+  \advance\AMCtok@size\m@ne%
+}
+\newcommand{\insertgroupfrom}[3][0]{%
+  \AMCgrouploop@prep{#1}{#2}{#3}%
   {\loop%
-    \advance\AMCtok@ik\@ne\relax%
+    \AMCgrouploop@next{#2}%
     {\the\csname #2@\romannumeral\AMCtok@ik\endcsname}%
-  \ifnum\AMCtok@ik<\AMCtok@max\repeat}%
+  \ifnum\AMCtok@size>\z@\repeat}%
+}
+\newcommand{\insertgroup}[2][0]{%
+  \insertgroupfrom[#1]{#2}{-1}%
 }
 \newcommand{\cleargroup}[1]{%
   \nouveaugroupe{#1}{}%
-  \csname #1@k\endcsname=\z@%
+  \csname #1@k\endcsname=\z@\relax%
+  \csname AMC#1@j\endcsname=\z@\relax%
 }
-\newcommand{\copygroup}[3][0]{%
-  \AMCtok@max=#1\relax%
-  \ifAMC@fullGroups\AMCtok@max=\z@\fi%
-  \ifnum\the\AMCtok@max<1%
-    \AMCtok@max=\csname #2@k\endcsname%
-  \fi%
-  \AMCtok@ik=\z@%
+\newcommand{\copygroupfrom}[4][0]{%
+  \AMCgrouploop@prep{#1}{#2}{#4}%
   {\loop%
-    \advance\AMCtok@ik\@ne\relax%
+    \AMCgrouploop@next{#2}%
     \AMC@prepare@element{#3}%
     \global\csname #3@\romannumeral\AMCtok@k\endcsname=\csname #2@\romannumeral\AMCtok@ik\endcsname%
-  \ifnum\AMCtok@ik<\AMCtok@max\repeat}%
+  \ifnum\AMCtok@size>\z@\repeat}%
+}
+\newcommand{\copygroup}[3][0]{%
+  \copygroupfrom[#1]{#2}{#3}{-1}%
 }
 \newcount\AMCrep@count
 \AMCload@counter=199
@@ -484,9 +708,22 @@
       \ifAMC@postcorrect\wrongchoice{\@aucune}\else\correctchoice{\@aucune}\fi%
     \fi\fi\fi\AMCrep@fini}
 \def\AMCmem@ireData{}
-\def\AMCformQuestion#1{\vspace{\AMCformVSpace}\par{\AMC@loc@qf{#1}}}
-\def\AMCformQuestionA#1{\setcounter{AMCquestionaff}{#1}%
-  \setcounter{AMC@ncase}{0}\AMCformQuestion{#1}}
+\def\AMCformBeforeQuestion{\vspace{\AMCformVSpace}\par}
+\def\AMCformAfterQuestion{\ifAMC@asqbloc\egroup\fi}
+\def\AMCformQuestion#1{{\AMC@loc@qf{#1}}}
+\def\AMCformQuestionA#1#2{\setcounter{AMCquestionaff}{#1}%
+  \AMCid@quest=#2%
+  \setcounter{AMC@ncase}{0}%
+  \AMCformBeforeQuestion%
+  \ifAMC@asqbloc\vbox\bgroup\fi%
+  \ifx\@empty\AMC@sza@callout\@empty\else%
+    \csname\AMC@sza@callout\endcsname%
+  \fi%
+  \AMCformQuestion{#1}%
+  \ifx\@empty\AMC@sza@callin\@empty\else%
+    \csname\AMC@sza@callin\endcsname%
+  \fi%
+}
 \def\AMCformAnswer#1{\hspace{\AMCformHSpace} #1}
 \def\AMCformAnswerA#1{\addtocounter{AMC@ncase}{1}\AMCformAnswer{#1}}
 \newcommand\AMCmem@ireAJ[1]{%
@@ -497,7 +734,7 @@
     \endgroup\fi\fi}
 \newcommand\AMCmem@ireAJRep[1]{%
   \addtocounter{AMC@ncase}{1}\AMCmem@ireAJ{\protect\AMCformAnswerA{#1}}}
-\newcommand\AMCmem@ireQ[1]{\AMCmem@ireAJ{\protect\AMCformQuestionA{#1}}}
+\newcommand\AMCmem@ireQ[2]{\AMCmem@ireAJ{\protect\AMCformQuestionA{#1}{#2}}}
 \def\AMCformBegin{%
   \AMC@zoneformulairetrue\setcounter{section}{0}%
   \ifAMC@ensemble\ifAMC@automarks\pagestyle{AMCpageFull}\fi\fi%
@@ -540,29 +777,140 @@
 \newcommand{\correctchoice}[2][]{\global\advance\AMCrep@count\@ne\relax%
   \ifAMC@calibration\AMC@amclog{AUTOQCM[REP=\the\AMCrep@count:B]^^J}\fi%
   \global\AMCune@bonnetrue%
-  \AMCload@@reponse{\une@rep{\ifAMC@correc\AMC@marque{#1}{1}%
-      \else\AMC@marque{#1}{}\fi}{#2}}{\the\AMCrep@count}\ignorespaces}
+  \AMCload@@reponse{\une@rep{\ifAMC@correc\AMC@box{#1}{1}%
+      \else\AMC@box{#1}{}\fi}{#2}}{\the\AMCrep@count}\ignorespaces}
 \newcommand{\wrongchoice}[2][]{\global\advance\AMCrep@count\@ne\relax%
   \ifAMC@calibration\AMC@amclog{AUTOQCM[REP=\the\AMCrep@count:M]^^J}\fi%
-  \AMCload@@reponse{\une@rep{\AMC@marque{#1}{}}{#2}}{\the\AMCrep@count}%
+  \AMCload@@reponse{\une@rep{\AMC@box{#1}{}}{#2}}{\the\AMCrep@count}%
   \ignorespaces}
+\newcommand{\AMCemptybox}[3]{{%
+    \sbox0{}\wd0=#1\ht0=#2\dp0=#3\relax\box0}}
+\newlength\AMC@mn@test
+\newlength\AMC@mn@sep\AMC@mn@sep=4mm
+\newlength\AMC@mn@leftmargin
+\newlength\AMC@mn@rightmargin
+\newcommand\AMCmarginNote[1]{%
+  \begin{tikzpicture}[remember picture,overlay]%
+    \coordinate (here) at (0,0);%
+    \pgfextractx{\AMC@mn@test}{\pgfpointdiff{\pgfpointorigin}%
+      {\pgfpointanchor{current page}{center}}}%
+    \ifodd\thepage%
+      \AMC@mn@leftmargin=\oddsidemargin%
+      \AMC@mn@rightmargin=\evensidemargin%
+    \else
+      \AMC@mn@leftmargin=\evensidemargin%
+      \AMC@mn@rightmargin=\oddsidemargin%
+    \fi
+    \ifdim\AMC@mn@test < 1cm%
+      \draw (current page.east |- here)+(-\AMC@mn@rightmargin-1in+\AMC@mn@sep,0pt) node[anchor=text,align=left,text width=\AMC@mn@rightmargin+1in-\AMC@mn@sep]{\strut #1};%
+    \else%
+      \draw (current page.west |- here)+(0cm,0pt) node[anchor=text,align=right,text width=\AMC@mn@leftmargin+1in-\AMC@mn@sep]{\strut #1};%
+    \fi%
+  \end{tikzpicture}%
+}
+\newcommand{\AMC@sz@box}{\AMCemptybox{\AMC@sz@width}{\AMC@sz@height}{\AMC@sz@depth}}
+\newcommand{\AMC@sz@callin@question}{\AMCscoreZone{\AMC@sz@box}}
+\newcommand{\AMC@sz@callout@margin}{\hspace{0pt}\marginpar{\AMCscoreZone{\AMC@sz@box}}}
+\newcommand{\AMC@sz@init@margins}{\PackageWarning{automultiplechoice}{Please run twice to get proper margin notes position.}}
+\newcommand{\AMC@sz@callout@margins}{\hspace{0pt}\AMCmarginNote{\AMCscoreZone{\AMC@sz@box}}}
+\newlength\AMC@sz@width
+\newlength\AMC@sz@height
+\newlength\AMC@sz@depth
+\def\AMC@sz@callout{}
+\def\AMC@sz@callin{}
+\define@key{AMCsz}{width}{\AMC@sz@width=#1}
+\define@key{AMCsz}{height}{\AMC@sz@height=#1}
+\define@key{AMCsz}{depth}{\AMC@sz@depth=#1}
+\define@key{AMCsz}{calloutside}{\def\AMC@sz@callout{#1}}
+\define@key{AMCsz}{callinside}{\def\AMC@sz@callin{#1}}
+\define@choicekey{AMCsz}{position}{none,question,margin,margins}{%
+  \ifcsname AMC@sz@callout@#1\endcsname%
+    \def\AMC@sz@callout{AMC@sz@callout@#1}%
+  \else%
+    \def\AMC@sz@callout{}%
+  \fi%
+  \ifcsname AMC@sz@callin@#1\endcsname%
+    \def\AMC@sz@callin{AMC@sz@callin@#1}%
+  \else%
+    \def\AMC@sz@callin{}%
+  \fi%
+  \ifcsname AMC@sz@init@#1\endcsname%
+    \csname AMC@sz@init@#1\endcsname%
+  \fi%
+}
+\newcommand{\AMCsetScoreZone}[1]{\setkeys{AMCsz}{#1}}
+\AMCsetScoreZone{width=1.5em,height=1.5ex,depth=.5ex,position=none}
+\newcommand{\AMC@sza@box}{\AMCemptybox{\AMC@sza@width}{\AMC@sza@height}{\AMC@sza@depth}}
+\newcommand{\AMC@sza@init@none}{}
+\newcommand{\AMC@sza@callout@none}{}
+\newcommand{\AMC@sza@callin@none}{}
+\newcommand{\AMC@sza@init@question}{}
+\newcommand{\AMC@sza@callout@question}{}
+\newcommand{\AMC@sza@callin@question}{\AMCscoreZone{\AMC@sza@box}}
+\newcommand{\AMC@sza@init@margin}{}
+\newcommand{\AMC@sza@callout@margin}{\hspace{0pt}\marginpar{\AMCscoreZone{\AMC@sza@box}}}
+\newcommand{\AMC@sza@callin@margin}{}
+\newcommand{\AMC@sza@init@margins}{\PackageWarning{automultiplechoice}{Please run twice to get proper margin notes position.}}
+\newcommand{\AMC@sza@callout@margins}{\hspace{0pt}\AMCmarginNote{\AMCscoreZone{\AMC@sz@box}}}
+\newcommand{\AMC@sza@callin@margins}{}
+\newlength\AMC@sza@width
+\newlength\AMC@sza@height
+\newlength\AMC@sza@depth
+\def\AMC@sza@callout{}
+\def\AMC@sza@callin{}
+\define@key{AMCsza}{width}{\AMC@sza@width=#1}
+\define@key{AMCsza}{height}{\AMC@sza@height=#1}
+\define@key{AMCsza}{depth}{\AMC@sza@depth=#1}
+\define@key{AMCsza}{calloutside}{\def\AMC@sza@callout{#1}}
+\define@key{AMCsza}{callinside}{\def\AMC@sza@callin{#1}}
+\define@choicekey{AMCsza}{position}{none,question,margin,margins}{%
+  \ifcsname AMC@sza@callout@#1\endcsname%
+    \def\AMC@sza@callout{AMC@sza@callout@#1}%
+  \else%
+    \def\AMC@sza@callout{}%
+  \fi%
+  \ifcsname AMC@sza@callin@#1\endcsname%
+    \def\AMC@sza@callin{AMC@sza@callin@#1}%
+  \else%
+    \def\AMC@sza@callin{}%
+  \fi%
+  \ifcsname AMC@sza@init@#1\endcsname%
+    \csname AMC@sza@init@#1\endcsname%
+  \fi%
+}
+\newcommand{\AMCsetScoreZoneAnswerSheet}[1]{\setkeys{AMCsza}{#1}}
+\AMCsetScoreZoneAnswerSheet{width=1.5em,height=1.5ex,depth=.5ex,position=none}
+\newcommand{\AMCnoScoreZone}{\AMCsetScoreZone{position=none}\AMCsetScoreZoneAnswerSheet{position=none}}
 \newcounter{AMCquestionaff}
 \newcommand{\AMCnumero}[1]{\setcounter{AMCquestionaff}{#1}\addtocounter{AMCquestionaff}{-1}}
-\newcommand\AMC@qaff{\addtocounter{AMCquestionaff}{1}\arabic{AMCquestionaff}}
-\def\AMCbeginQuestion#1#2{\par\noindent\AMC@loc@q{#1}{#2}\hspace*{1em}}
+\newcommand\AMC@stepQuestion{\ifAMCquestionNumber\refstepcounter{AMCquestionaff}\fi}
+\newcommand\AMC@qaff{\arabic{AMCquestionaff}}
+\def\AMCbeforeQuestion{\ifAMC@qbloc\else\par\noindent\fi}
+\def\AMCbeginQuestion#1#2{\noindent\AMC@loc@q{#1}{#2}%
+  \ifx\@empty\AMC@sz@callin\@empty\hspace*{1em}\fi%
+}
 \def\multiSymbole{$\clubsuit$}
 \ifx\question\undefined\else\let\question\undefined\fi
 \def\AMCnobloc{\AMC@qblocfalse}
 \def\AMCbloc{\AMC@qbloctrue}
 \newenvironment{question}[2][]{%
+  \def\AMCcurrentenv{question}%
+  \AMC@stepQuestion%
   \global\def\AMCid@name{#2}\AMC@affecte{#2}{\AMCid@quest}%
   \ifAMC@calibration\AMCmessage{Q=\the\AMCid@quest}\fi%
+  \AMCbeforeQuestion%
+  \ifx\@empty\AMC@sz@callout\@empty\else%
+    \csname\AMC@sz@callout\endcsname%
+  \fi%
   \AMCtype@multifalse\ifAMC@qbloc\noindent\begin{minipage}{\linewidth}\fi%
   \ifAMC@affichekeys\index{\texttt{#2}}\fi%
   \AMCbeginQuestion{\ifAMC@affichekeys\ifAMC@ensemble\AMC@qaff\ \fi[\texttt{#2}]\else\AMC@qaff\fi}{#1}%
+  \ifx\@empty\AMC@sz@callin\@empty\else%
+    \csname\AMC@sz@callin\endcsname%
+  \fi%
   \AMCformulaire@dedansfalse\setcounter{AMC@ncase}{0}%
-  \AMCmem@ireQ{\arabic{AMCquestionaff}}}%
-{\ifAMC@qbloc\end{minipage}\vspace{\AMCinterBquest}\else\vspace{\AMCinterIquest}\fi\AMCmessage{FQ}}
+  \AMCmem@ireQ{\arabic{AMCquestionaff}}{\the\AMCid@quest}}%
+{\ifAMC@qbloc\end{minipage}\vspace{\AMCinterBquest}\else\vspace{\AMCinterIquest}\fi\AMCmessage{FQ}\AMCmem@ireAJ{\AMCformAfterQuestion}}
 \newenvironment{questionmult}[1]{%
   \AMCune@bonnefalse\begin{question}[{{\multiSymbole}}]{#1}%
   \AMCtype@multitrue\ifAMC@calibration%
@@ -573,10 +921,18 @@
 {\end{questionmult}\endgroup}
 \newdimen\ouverte@vs
 \newenvironment{questionouverte}[1][3cm]{%
+  \AMC@stepQuestion%
   \AMCtype@multifalse\ouverte@vs=#1%
   \ifAMC@qbloc\noindent\begin{minipage}{\linewidth}\fi%
   \AMCbeginQuestion{\AMC@qaff}{}}%
 {\vspace*{\ouverte@vs}\ifAMC@qbloc\end{minipage}\vspace{3ex}\fi}
+\newcommand{\explain}[1]{%
+\ifAMC@correchead%
+  \AMCif@env{question}{\par\noindent{\AMC@loc@explain #1}}{\AMC@error@explain}\vspace{1ex}%
+\else%
+  \AMCif@env{question}{}{\AMC@error@explain}%
+\fi%
+}
 \def\scoring#1{\ifAMC@calibration\AMC@amclog{AUTOQCM[B=#1]^^J}\fi}
 \def\scoringDefaultS#1{\ifAMC@calibration\AMC@amclog{AUTOQCM[BDS=#1]^^J}\fi}
 \def\scoringDefaultM#1{\ifAMC@calibration\AMC@amclog{AUTOQCM[BDM=#1]^^J}\fi}
@@ -584,20 +940,20 @@
 \newcount\AMC@chiffres
 \newdimen\AMCcodeHspace\AMCcodeHspace=.5em
 \newdimen\AMCcodeVspace\AMCcodeVspace=.5em
-\newdimen\AMCcodeBoxSep\AMCcodeBoxSep=.1em
 \newcommand{\AMCcode}[2]{%
-{\def\AMCbeginQuestion##1##2{}%
+{\def\AMCbeginQuestion##1##2{}\def\AMCbeforeQuestion{}\AMCnoScoreZone%
+  \AMCquestionNumberfalse%
  \setlength{\parindent}{0pt}%
  \def\AMCbeginAnswer{\hspace{0pt}%
     \vbox\bgroup}%
  \def\AMCendAnswer{\vspace{-\AMCcodeVspace}\egroup%
     \hspace{\AMCcodeHspace}}%
- \def\AMCanswer##1##2{\hbox{##1\ifAMC@ensemble\else%
-   \ifAMC@inside@box\else{\hspace{\AMCcodeBoxSep}\textbf{##2}}\fi\fi\hspace*{\fill}}%
+ \def\AMCanswer##1##2{\hbox{\ifAMC@ensemble ##1\else%
+   \ifAMC@inside@box ##1\else{\AMCboxOutsideLetter{##1}{##2}}\fi\fi\hspace*{\fill}}%
    \vspace{\AMCcodeVspace}}%
  \AMCnobloc%
  \AMC@chiffres=#2\loop%
- \begin{question}{#1.\the\AMC@chiffres}\QuestionIndicative%
+ \begin{question}{#1[\the\AMC@chiffres]}\QuestionIndicative%
    \begin{choicescustom}[o]\scoring{auto=0}%
      \wrongchoice[0]{0}%
      \wrongchoice[1]{1}%
@@ -615,16 +971,17 @@
  \hspace{-\AMCcodeHspace}%
 }}
 \newcommand{\AMCcodeH}[2]{%
-{\def\AMCbeginQuestion##1##2{}%
+{\def\AMCbeginQuestion##1##2{}\def\AMCbeforeQuestion{}\AMCnoScoreZone%
+  \AMCquestionNumberfalse%
  \setlength{\parindent}{0pt}%
  \def\AMCbeginAnswer{\hbox\bgroup}%
  \def\AMCendAnswer{\egroup\vspace{\AMCcodeVspace}\par}%
- \def\AMCanswer##1##2{\hbox{##1\ifAMC@ensemble\else%
-   \ifAMC@inside@box\else\hspace{\AMCcodeBoxSep}\textbf{##2}\fi\fi}%
+ \def\AMCanswer##1##2{\hbox{\ifAMC@ensemble ##1\else%
+   \ifAMC@inside@box ##1\else{\AMCboxOutsideLetter{##1}{##2}}\fi\fi}%
    \hspace{\AMCcodeHspace}}%
  \AMCnobloc%
  \AMC@chiffres=#2\loop%
- \begin{question}{#1.\the\AMC@chiffres}\QuestionIndicative%
+ \begin{question}{#1[\the\AMC@chiffres]}\QuestionIndicative%
    \begin{choicescustom}[o]\scoring{auto=0}%
      \wrongchoice[0]{0}%
      \wrongchoice[1]{1}%
@@ -654,9 +1011,11 @@
 \newcommand{\AMCnumeric@char}[2]{%
   \global\advance\AMCrep@count\@ne\relax%
   \AMC@amclog{AUTOQCM[REP=\the\AMCrep@count:\ifx#2\@empty\@empty M\else B\fi]^^J}%
-  \ifAMC@correc\AMC@marque{#1}{#2}\else\AMC@marque{#1}{}\fi%
-  \ifAMC@inside@box\else\ifAMC@ensemble\else%
-    \hspace{\AMCcodeBoxSep}\textbf{#1}\fi\fi%
+  \ifAMC@correc%
+    \protect\AMC@formBox@{#1}{#2}{1}{case:\AMCid@name:\the\AMCid@quest,\the\AMCrep@count}%
+  \else%
+    \protect\AMC@formBox@{#1}{}{1}{case:\AMCid@name:\the\AMCid@quest,\the\AMCrep@count}%
+  \fi%
 }
 \newdimen\AMCnumeric@Hspace\AMCnumeric@Hspace=.5em
 \newdimen\AMCnumeric@Vspace\AMCnumeric@Vspace=1ex
@@ -813,7 +1172,7 @@
     \fi%
   \fi%
   \ifKV@AMCNumeric@scoring%
-    \AMC@amclog{AUTOQCM[B=formula=(Vdifference<=\the\AMC@numeric@exact?%
+    \AMC@amclog{AUTOQCM[B=haut=,mz=,formula=(Vdifference<=\the\AMC@numeric@exact?%
       \AMC@numeric@scoreexact:%
       \ifnum\AMC@numeric@approx>\z@%
         (Vdifference<=\the\AMC@numeric@approx?\AMC@numeric@scoreapprox:0)%
@@ -844,7 +1203,7 @@
   \AMC@amclog{AUTOQCM[B=set.intV=\the\AMC@numeric@value,%
     set.intX=\AMC@numeric@compute]^^J}%
   \ifKV@AMCNumeric@significant%
-    \AMC@amclog{AUTOQCM[B=set.Vdifference="min( abs((intV)-(intX)) , abs(10*(intV)-(intX)) , abs((intV)-10*(intX)) )"]^^J}%
+    \AMC@amclog{AUTOQCM[B=set.Vdifference="min( abs((intV)-(intX)) , abs(\the\AMC@numeric@base * (intV) - (intX)) , abs((intV) - \the\AMC@numeric@base * (intX)) )"]^^J}%
   \else%
     \AMC@amclog{AUTOQCM[B=set.Vdifference=abs((intV)-(intX))]^^J}%
   \fi%
@@ -943,7 +1302,7 @@
 \define@key{AMCOpen}{backgroundcol}{\def\AMCocol@Background{#1}}
 \define@key{AMCOpen}{foregroundcol}{\def\AMCocol@Foreground{#1}}
 \define@key{AMCOpen}{Treserved}{\def\AMCotextReserved{#1}}
-\define@key{AMCOpen}{question}{\def\AMCopen@question{#1}}
+\define@key{AMCOpen}{question}[\AMCid@name]{\def\AMCopen@question{#1}}
 \define@key{AMCOpen}{answer}{\def\AMCopen@answer{#1}}
 \define@key{AMCOpen}{contentcommand}[AMCopen@lines]{\def\AMCopen@contentcommand{#1}}
 \newdimen\AMCopen@Hspace\AMCopen@Hspace=.5em
@@ -971,9 +1330,9 @@
 \newcommand\AMCopen@lines{%
   \begin{minipage}{\AMCopen@Width}%
     \loop\vspace{\AMCopen@LineHeight}
-    ~\ifAMC@correc\smash{\AMCopen@answer}\def\AMCopen@answer{}\fi%
+    \hspace*{.5em}\ifAMC@correc\smash{\AMCopen@answer}\def\AMCopen@answer{}\fi%
     \ifKV@AMCOpen@dots%
-    \dotfill~
+    \dotfill\hspace*{.5em}
     \fi
     \ifnum\AMCopen@Lines>\@ne\par\advance\AMCopen@Lines\m@ne\repeat%
   \end{minipage}
@@ -988,12 +1347,12 @@
       \ifAMC@ensemble\else\par\fi%
       \ifAMC@correc\smash{\AMCopen@answer}\fi\dotfill%
     \else%
-      \linebreak[1]\hspace*{\fill}%
+      \hspace*{.5em}\linebreak[1]\hspace*{\fill}%
     \fi%
     {\AMCnoCompleteMulti%
       \def\AMCbeginAnswer{}\def\AMCendAnswer{}%
-      \def\AMCanswer##1##2{##1\ifAMC@ensemble\else%
-          \ifAMC@inside@box\else{\hspace{\AMCcodeBoxSep}\textbf{##2}}\fi\fi%
+      \def\AMCanswer##1##2{\ifAMC@ensemble ##1\else%
+          \ifAMC@inside@box ##1\else{\AMCboxOutsideLetter{##1}{##2}}\fi\fi%
         \hspace{\AMCopen@Hspace}}%
       \fboxsep=\AMCopen@boxmargin%
       \fboxrule=\AMCopen@boxframerule%
@@ -1038,6 +1397,40 @@
   \ifAMC@qbloc\else\vspace{1.5ex}\par\fi%
 }
 \def\AMCOpen{\AMCformatChoices{\AMCopenShow}{\AMCopenHide}}
+\def\AMCbotextGoto{}
+\def\AMCbo@help{}
+\define@key{AMCBoxOnly}{help}{\def\AMCbo@help{#1}}
+\define@boolkey{AMCBoxOnly}{ordered}[false]{}
+\setkeys{AMCBoxOnly}{ordered}
+\newcommand\AMCboOpts[1]{\setkeys{AMCBoxOnly}{#1}}
+\newcommand\AMCboShow[4]{%
+  \ifAMC@ensemble\def\AMCid@name{#3}\AMCid@quest=#4\fi%
+  \ifAMC@ensemble\ifAMCformulaire@dedans%
+    \AMC@amclog{AUTOQCM[Q=\the\AMCid@quest]^^J}%
+  \fi\fi%
+  {\setkeys{AMCBoxOnly}{#1}%
+    \def\AMCbeginAnswer{}\def\AMCendAnswer{}%
+    \def\AMCanswer##1##2{\hspace{\AMCformHSpace} \ifAMC@ensemble ##1\else%
+      \ifAMC@inside@box ##1\else{\AMCboxOutsideLetter{##1}{##2}}\fi\fi%
+      }%
+    \ifAMC@ensemble\AMCbo@help\fi%
+    \ifKV@AMCBoxOnly@ordered%
+      \begin{choicescustom}[o]%
+    \else%
+      \begin{choicescustom}%
+    \fi%
+      #2
+    \end{choicescustom}%
+  }%
+  \ifAMC@ensemble\ifAMCformulaire@dedans%
+  \AMC@amclog{AUTOQCM[FQ]^^J}%
+  \fi\fi%
+}
+\newcommand\AMCboHide[4]{
+  \AMCbotextGoto%
+  \ifAMC@qbloc\else\vspace{1.5ex}\par\fi%
+}
+\def\AMCBoxOnly{\AMCformatChoices{\AMCboShow}{\AMCboHide}}
 \DeclareFontShape{OT1}{cmr}{b}{n}{<35->cmr17}{}
 \def\AMC@watertext{\AMC@loc@draft}
 \newcommand\AMCw@termark{%
@@ -1068,6 +1461,7 @@
 \def\he@dhaut#1{\he@dtaille{#1\vspace*{\fill}}}
 \def\AMC@intituleHead{\AMC@loc@corrected}
 \def\AMC@note{}
+\def\AMCsetFoot#1{\def\AMC@note{#1}}
 \newcommand\AMCStudentNumber{\the\AMC@etud}
 \newcommand\AMCIDBoxesA{\AMCbin@begin{1}\AMC@binaryBoxes[\AMC@NCBetud]{\the\AMCid@etud}}
 \newcommand\AMCIDBoxesB{\AMCbin@begin{2}\AMC@binaryBoxes[\AMC@NCBpage]{\thepage}}
@@ -1115,6 +1509,11 @@
   \renewcommand{\headrulewidth}{0pt}%
   \renewcommand{\footrulewidth}{0pt}%
 }
+\fancypagestyle{AMCpageEmpty}{%
+  \fancyhf{}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0pt}%
+}
 \AtBeginDocument{%
   \ifAMC@pagelayout%
     \ifAMC@correchead
@@ -1141,25 +1540,38 @@
     #2\clearpage}\advance\AMCid@etud\@ne\ifnum\AMCid@etud<\AMCid@etudfin\repeat%
   \global\AMCid@etudstart=\AMCid@etud%
 }
-\def\AMCcleardoublepage{\ifodd\thepage\clearpage~\fi\clearpage}
+\def\AMCcleardoublepage{\ifodd\thepage\clearpage%
+  \ifAMC@automarks\pagestyle{AMCpageEmpty}\fi%
+  ~\fi\clearpage}
+\newcommand{\AMCaddpagesto}[1]{%
+  \@whilenum\thepage<#1\do{%
+    \clearpage~%
+    \ifnum\thepage<#1%
+      \ifAMC@automarks\pagestyle{AMCpageEmpty}\fi%
+    \fi%
+  }%
+}
 \def\exemplairepair{\ifodd\AMCid@etud}
-\def\AMClabel#1{\expandafter\label{\the\AMCid@etud-#1}}
-\def\AMCref#1{\expandafter\ref{\the\AMCid@etud-#1}}
-\def\AMCpageref#1{\expandafter\pageref{\the\AMCid@etud-#1}}
+\newcommand\AMCstudentlabel[1]{\the\AMCid@etud-#1}
+\def\AMClabel#1{\expandafter\label{\AMCstudentlabel{#1}}}
+\def\AMCref#1{\expandafter\ref{\AMCstudentlabel{#1}}}
+\def\AMCpageref#1{\expandafter\pageref{\AMCstudentlabel{#1}}}
 \newcommand{\AMCqlabel}[1]{%
-  \protected@write\@auxout{}{\string\newlabel{\the\AMCid@etud-#1}{{\arabic{AMCquestionaff}}{\thepage}}}%
+  \AMClabel{#1}%
 }
 \newcommand{\AMCassociation}[1]{%
   \ifAMC@calibration\protected@write\AMC@XYFILE{}{%
     \string\association{\the\AMCid@etud}{#1}%
   }\fi%
 }
+\def\AMC@lang@code{}
 \DeclareOptionX{noshuffle}{\AMC@ordretrue}
 \DeclareOptionX{noshufflegroups}{\AMC@shuffleGfalse}
 \DeclareOptionX{fullgroups}{\AMC@fullGroupstrue}
 \DeclareOptionX{answers}{\AMC@correcheadtrue\AMC@correctrue}
 \DeclareOptionX{indivanswers}{\AMC@correctrue}
 \DeclareOptionX{box}{\AMC@qbloctrue}
+\DeclareOptionX{asbox}{\AMC@asqbloctrue}
 \DeclareOptionX{separateanswersheet}{\AMC@ensembletrue}
 \DeclareOptionX{digits}{\AMC@inside@digittrue}
 \DeclareOptionX{ordre}{\AMC@ordretrue}
@@ -1181,8 +1593,8 @@
   \AMC@fullGroupstrue%
   \def\AMC@intituleHead{\AMC@loc@catalog}\AMC@affichekeystrue}
 \DeclareOptionX{catalog}{\AMC@catalogMode}
-\DeclareOptionX{francais}{\AMC@loc@FR}
-\DeclareOptionX{lang}{\csname AMC@loc@#1\endcsname}
+\DeclareOptionX{francais}{\def\AMC@lang@code{FR}\AMC@loc@FR}
+\DeclareOptionX{lang}{\def\AMC@lang@code{#1}\csname AMC@loc@#1\endcsname}
 \DeclareOptionX{versionA}{%
   \def\AMCid@checkmax{31}\def\AMC@NCBetud{9}\def\AMC@NCBpage{4}%
   \def\AMC@NCBcheck{5}\setlength{\AMC@CBtaille}{4cm}%
@@ -1191,7 +1603,27 @@
 \DeclareOptionX{nopage}{\AMC@pagelayoutfalse}
 \DeclareOptionX{postcorrect}{\AMC@postcorrecttrue}
 \DeclareOptionX{automarks}{\AMC@automarkstrue}
+\newif\ifAMCneeds@storebox\AMCneeds@storeboxfalse
+\DeclareOptionX{storebox}{\AMCneeds@storeboxtrue}
 \ProcessOptionsX
+
+\ifAMCneeds@storebox
+  \RequirePackage{storebox}\AtBeginDocument{{}}%
+\fi
+\AtBeginDocument{
+  \ifAMCneeds@storebox
+    \let\AMC@new@savebox=\newstorebox%
+    \let\AMC@save@box=\storebox%
+    \let\AMC@use@box=\usestorebox%
+  \fi
+  \AMC@new@savebox{\AMC@ovalbox@R}
+  \AMC@new@savebox{\AMC@ovalbox@RF}
+  \AMC@new@savebox{\AMC@ovalbox@}
+  \AMC@new@savebox{\AMC@ovalbox@F}
+}
+\def\AMC@error@explain{\PackageError{automultiplechoice}{
+    Command \protect\explain\space can only be used inside\MessageBreak question like environments}{Something's gone wrong.\MessageBreak \space \space Try typing \space <return>\space to proceed, ignoring \protect\explain.
+}}
 \ifAMC@plain
 \else
   \IfFileExists{environ.sty}{\RequirePackage{environ}}{}
@@ -1212,9 +1644,9 @@
 \message{***SUJET***^^J}
 \AMC@calibrationtrue\AMC@correcfalse\AMC@correcheadfalse\AMC@watermarkfalse
 \fi
-\ifx\CalibrationExterne\undefined\else
-\message{***CALIBRATION***^^J}
-\AMC@calibrationtrue\AMC@correcfalse\AMC@correcheadfalse\AMC@watermarkfalse
+\ifx\ScoringExterne\undefined\else
+\message{***SCORING***^^J}
+\AMC@calibrationtrue\AMC@correcfalse\AMC@correcheadfalse\AMC@watermarkfalse\AMC@invisibletrue
 \fi
 \ifx\CorrigeExterne\undefined\else
 \message{***CORRIGE***^^J}
@@ -1256,6 +1688,13 @@
 \newwrite\AMC@XYFILE%
 \immediate\openout\AMC@XYFILE\jobname.xy%
 \immediate\write\AMC@XYFILE{\string\version{\AMC@VERSION}}
+\immediate\write\AMC@XYFILE{\string\with{codedigit=squarebrackets}}
+\immediate\write\AMC@XYFILE{\string\with{version=\AMC@VERSION}}
+\immediate\write\AMC@XYFILE{\string\with{ensemble=\ifAMC@ensemble yes\else no\fi}}
+\immediate\write\AMC@XYFILE{\string\with{insidebox=\ifAMC@inside@box yes\else no\fi}}
+\immediate\write\AMC@XYFILE{\string\with{ousidebox=\ifAMC@outside@box yes\else no\fi}}
+\immediate\write\AMC@XYFILE{\string\with{postcorrect=\ifAMC@postcorrect yes\else no\fi}}
+\immediate\write\AMC@XYFILE{\string\with{lang=\AMC@lang@code}}
 \fi
 \let\reponses=\choices\let\endreponses=\endchoices
 \let\reponseshoriz=\choiceshoriz\let\endreponseshoriz=\endchoiceshoriz
