@@ -5,9 +5,9 @@
 %           (auto-multiple choice) utilizado no PCS (Departamento de Engenharia
 %           de Computação e Sistemas Digitais) da Escola Politécnica da
 %           Universidade de São Paulo.
-% \author   Prof. Dr. Bruno de Carvalho Albertini
+% \author   Prof. Dr. Bruno de Carvalho Albertini]
 % \warning  Contact balbertini at usp dot br
-% \version  20150818
+% \version  20170815
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Changelog:
 % 20150406 - Testes com o AMC, comando AMCcodeT
@@ -15,10 +15,11 @@
 % 20150810 - Transformação em folha de estilo
 % 20150811 - Inclusão dos comandos turma, disciplina e avaliacao
 % 20150818 - Formatação para tornar público
+% 20170815 - Colunas para mais de 5 turmas (Fábio Levy)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \NeedsTeXFormat{LaTeX2e}[1994/06/01]
-\ProvidesPackage{pcsamc}[2015/08/10 AMC PCS Customizations]
+\ProvidesPackage{pcsamc}[2017/08/02 AMC PCS Customizations]
 
 \RequirePackage[insidebox]{automultiplechoice}
 %% Define a geometria para folha A4
@@ -40,29 +41,42 @@
 
 \makeatletter
 
-% Expande tupla num/nome para num nome
-\def\turma#1{\expandafter\turma@i#1\@nil}
-\def\turma@i#1/#2\@nil{\gdef\@turma{\wrongchoice[#1]{#2}\scoring{#1}}}
-\def\@turma{\@latex@warning@no@line{Comando \noexpand\turma faltando.}}
-% Expande a lista de turmas para até 4 turmas
-\def\turmas#1{\expandafter\turmas@i#1,,,,,,,,\@nil}
-\def\turmas@i#1,#2,#3,#4,#5,#6,#7,#8,#9\@nil{%
-    \ifx$#2$ \gdef\@turmas{\turma{#1}\@turma}
-    \else
-    \ifx$#3$ \gdef\@turmas{\turma{#1}\@turma%
-                           \turma{#2}\@turma}
-    \else
-    \ifx$#4$ \gdef\@turmas{\turma{#1}\@turma%
-                           \turma{#2}\@turma%
-                           \turma{#3}\@turma}
-    \else
-    \gdef\@turmas{\turma{#1}\@turma%
-                            \turma{#2}\@turma%
-                            \turma{#3}\@turma%
-                            \turma{#4}\@turma}
-    \fi\fi\fi
+%% Comando de turmas novo.
+\newcommand\turmas[1]{\gdef\@turmas{#1}}
+\usepackage{pgffor}
+\usepackage{xstring}
+\newcommand{\eturmas}[1]{
+  \StrCount{#1,}{,}[\numberOfRepetitions]
+  \ifnum\numberOfRepetitions>5
+  	\begin{multicols}{5\setlength{\columnseprule}{0pt}\setlength{\columnsep}{1pt}}
+  		\begin{choices}[o]\scoring{auto=0}%
+  		\foreach \n/\p in #1 {
+    		\wrongchoice[\n]{\p}\scoring{\n}
+  		}
+  		\end{choices}%
+  	\end{multicols}
+  \else
+	\begin{choicescustom}[o]\scoring{auto=0}%
+ 		% \StrCount{#1,}{,}
+  		\foreach \n/\p in #1 {
+    		\wrongchoice[\n]{\p}\scoring{\n}
+  		}
+  	\end{choicescustom}%
+  \fi
 }
 \def\@turmas{\@latex@warning@no@line{Comando \noexpand\turmas faltando.}}
+
+\newcommand{\espacamentoDepoisDasTurmas}[1]{
+  \StrCount{#1,}{,}[\numberOfRepetitions]
+  \newcount\colunas\colunas=5
+  \newcount\linhas\linhas=\number\numberOfRepetitions
+  \divide\linhas by\colunas
+  \ifnum\linhas>0
+    \par{\vspace{0em}}
+  \else
+    \par{\vspace{2em}}
+  \fi
+}
 
 %% Data no formato abaixo. Não utilize zeros à esquerda.
 %% \data{dia}{mês}{ano}
@@ -106,9 +120,8 @@
   \AMCnobloc%
   \begin{question}{#1.
    }\QuestionIndicative%
-   \begin{choicescustom}[o]\scoring{auto=0}%
-    {\@turmas}
-   \end{choicescustom}%
+  %  \wrongchoice[0]{0}\scoring{0}%
+    \eturmas{\@turmas}
   \end{question}%
 }}
 
@@ -140,7 +153,9 @@
   \setcounter{figure}{0}
   %
   \par{\vspace{0.5cm}}
-  \noindent{\bf {\@dcod} - {\@dnome} - {\@semestre} \hfill {\@avaliacao} - {\@data}}
+  \noindent{\bf {\@dcod} - {\@dnome} \hfill {\@avaliacao} - {\@data}}
+  % Com espaço do semestre
+  %\noindent{\bf {\@dcod} - {\@dnome} - {\@semestre} \hfill {\@avaliacao} - {\@data}}
   %
   \par{\vspace{0.5cm}}
   \begin{minipage}{5cm}
@@ -154,11 +169,9 @@
     % Se essa opção estiver no arquivo de provas (.tex), gera campo para concordância sobre a doação dos caracteres manuscritos.
     \ifdefined\@doar%
       \par{\vspace{2em}}\AMCcodeDoar{doar}{1}\hspace*{\fill}%
-    \else%
-      \par{\vspace{2em}}\hspace*{\fill}%
     \fi
-    % \par{\vspace{2em}}\AMCcodeT{turma}{1}\hspace*{\fill}
-    \par{\vspace{1em}} Marque as caixas ao lado para formar o seu número USP, as caixas acima para sua turma, escreva sua bancada acima e seu nome abaixo.\hspace*{\fill}
+    \par{\vspace{1em}}\AMCcodeT{turma}{1}\hspace*{\fill}
+    \espacamentoDepoisDasTurmas{\@turmas}Marque as caixas ao lado para formar o seu número USP, as caixas acima para sua turma e seu nome abaixo.\hspace*{\fill}
     \par{\vspace{1em}}
     \hfill\namefield{\fbox{
       \begin{minipage}{12cm}
