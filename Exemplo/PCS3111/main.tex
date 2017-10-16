@@ -3,11 +3,16 @@
 \usepackage[brazilian]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{subfig}
-\usepackage{adjustbox}
+\usepackage{needspace}
+
+% Para evitar substituição de << por aspas francesas
+\usepackage{microtype}
+\DisableLigatures[<]{encoding = T1}
 
 % Estilo PCSAMC com as personalizações
 \usepackage{pcsamc}
@@ -15,85 +20,115 @@
 \usepackage{xhfill}
 \usepackage{multicol}
 \setlength{\columnsep}{1.5cm}
-%\setlength{\columnseprule}{1pt}
+\setlength{\columnseprule}{1pt}
 
 \begin{document}
 \element{dissertativas}{
-    \def\AMCbeginQuestion#1#2{\par #2\hspace*{1em}}
+	\def\AMCbeginQuestion#1#2{\par #2\hspace*{1em}}
 	\noindent{}{\large{}\textbf{[2,6 pontos] Questão 1}}\par
+	\begin{questionmult}{Q1}\scoring{v=-1,MAX=2.6}
+		\AMCOpen{lineup=true,dots=false}{
+			Para uso do professor:
+			\correctchoice[0]{0}\scoring{b=0,m=0}
+			\correctchoice[05]{1}\scoring{b=0.05,m=0}
+			\correctchoice[1]{2}\scoring{b=0.1,m=0}
+			\correctchoice[2]{3}\scoring{b=0.2,m=0}
+			\correctchoice[4]{4}\scoring{b=0.4,m=0}
+			\correctchoice[5]{5}\scoring{b=0.5,m=0}
+			\correctchoice[10]{6}\scoring{b=1.0,m=0}
+			\correctchoice[15]{7}\scoring{b=1.5,m=0}
+			\correctchoice[20]{8}\scoring{b=2.0,m=0}
+			\correctchoice[26]{9}\scoring{b=2.6,m=0}
+		}
+		\par
+	\end{questionmult}
 	\input{questao1.tex}
-	
-    \def\AMCbeginQuestion#1#2{\par #2\hspace*{1em}}
+	\newpage
+	\def\AMCbeginQuestion#1#2{\par #2\hspace*{1em}}
 	\noindent{}{\large{}\textbf{[2,6 pontos] Questão 2}}\par
+	\begin{questionmult}{Q2}\scoring{v=-1,MAX=2.6}
+		\AMCOpen{lineup=true,dots=false}{
+			Para uso do professor:
+			\correctchoice[0]{0}\scoring{b=0,m=0}
+			\correctchoice[05]{1}\scoring{b=0.05,m=0}
+			\correctchoice[1]{2}\scoring{b=0.1,m=0}
+			\correctchoice[2]{3}\scoring{b=0.2,m=0}
+			\correctchoice[4]{4}\scoring{b=0.4,m=0}
+			\correctchoice[5]{5}\scoring{b=0.5,m=0}
+			\correctchoice[10]{6}\scoring{b=1.0,m=0}
+			\correctchoice[15]{7}\scoring{b=1.5,m=0}
+			\correctchoice[20]{8}\scoring{b=2.0,m=0}
+			\correctchoice[26]{9}\scoring{b=2.6,m=0}
+		}
+		\par
+	\end{questionmult}
 	\input{questao2.tex}
 }
 	
-\element{testes}{
-	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
-	\begin{question}{Teste 1}\scoring{b=0.6,e=0,v=0,m=0}
-		\input{teste1.tex}
-    \end{question}
-}
-
-\element{testes}{
-	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
-	\begin{question}{Teste 2}\scoring{b=0.6,e=0,v=0,m=0}
-		\input{teste2.tex}
-	\end{question}
-}
-
-\element{testes}{		
-	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
-	\begin{question}{Teste 3}\scoring{b=0.6,e=0,v=0,m=0}
-		\input{teste3.tex}
-	\end{question}
-}
-
-\element{testes}{
-	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
-	\begin{question}{Teste 4}\scoring{b=0.6,e=0,v=0,m=0}
-		\input{teste4.tex}
-	\end{question}
-}
-
-\element{testes}{
-	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
-	\begin{question}{Teste 5}\scoring{b=0.6,e=0,v=0,m=0}
-		\input{teste5.tex}
-	\end{question}
-}
-
-\element{testes}{
-	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
-	\begin{question}{Teste 6}\scoring{b=0.6,e=0,v=0,m=0}
-		\input{teste6.tex}
-	\end{question}
-}
-
-\element{testes}{
-	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
-	\begin{question}{Teste 7}\scoring{b=0.6,e=0,v=0,m=0}
-		\input{teste7.tex}
-	\end{question}
-}
-
-\element{testes}{
-	\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
-	\begin{question}{Teste 8}\scoring{b=0.6,e=0,v=0,m=0}
-		\input{teste8.tex}
-	\end{question}
- }
+	\element{testes}{
+		\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+		\begin{question}{Teste 1}\scoring{b=0.6,e=0,v=0}
+			\input{teste1.tex}
+	    \end{question}
+	}
+    \element{testes}{
+		\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+		\begin{question}{Teste 2}\scoring{b=0.6,e=0,v=0,m=0}
+			\input{teste2.tex}
+		\end{question}
+	}
+    \element{testes}{
+		\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+		\begin{question}{Teste 3}\scoring{b=0.6,e=0,v=0,m=0}
+			\input{teste3.tex}
+		\end{question}
+	
+	}
+    \element{testes}{
+		\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+		\begin{question}{Teste 4}\scoring{b=0.6,e=0,v=0,m=0}
+			\input{teste4.tex}
+		\end{question}
+	
+	}
+    \element{testes}{
+		\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+		\begin{question}{Teste 5}\scoring{b=0.6,e=0,v=0,m=0}
+			\input{teste5.tex}
+		\end{question}
+	}
+    \element{testes}{
+		\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+		\begin{question}{Teste 6}\scoring{b=0.6,e=0,v=0,m=0}
+			\input{teste6.tex}
+		\end{question}
+	}
+    \element{testes}{
+		\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+		\begin{question}{Teste 7}\scoring{b=0.6,e=0,v=0,m=0}
+			\input{teste7.tex}
+		\end{question}
+	}
+    \element{testes}{
+		\def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
+		\begin{question}{Teste 8}\scoring{b=0.6,e=0,v=0,m=0}
+			\input{teste8.tex}
+		\end{question}
+    }
 
   % Início da impressão de cada prova
   \onecopy{1}{
     \disciplina{PCS3111}{Laboratório de Programação Orientada a Objetos}
-    \avaliacao{1a. Prova}
-    \data{31/08/2016}
-    \turmas{1/2M, 2/2T, 3/3M, 4/4M, 5/4T, 6/5M, 7/5T, 8/6T}
+    \avaliacao{Prova 1}
+    \data{01}{01}{2017}
+    \turmas{1/2a. M, 6/5a. M, 2/2a. T, 7/5a. T, 3/3a. T, 8/6a. M,
+      4/4a. M, 9/6a. T, 5/4a. T}
     \cabecalho{}
     
-    \input{cabecalho.tex}
+	\input{cabecalho.tex}
 
+	\newpage
+   	
 	\noindent{}{\large{}\textbf{[5,2 pontos] Parte I - Questões Dissertativas}}\par
 	\vspace{1cm}
 
@@ -102,11 +137,11 @@
     % \def\AMCbeginQuestion#1#2{\par\noindent{\bf Teste #1} #2\hspace*{1em}}
     % Insere as questões aleatorizadas, começando pelo número abaixo
     % \AMCnumero{1}
-    
-	\newpage
+   \newpage
+
 	\noindent{}{\large{}\textbf{[4,8 pontos] Parte II - Testes}}\par
 	\vspace{1cm}
-
+	\AMCnumero{1}
     \shufflegroup{testes}
     \insertgroup{testes}
   }
